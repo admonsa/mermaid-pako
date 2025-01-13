@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid Graph Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako/dist/pako.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #graphContainer {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+            max-height: 100%; /* Adjust as needed */
+            max-width: 100%; /* Adjust as needed */
+        }
+        .mermaid {
+            transform: scale(1);
+            transform-origin: 0 0; /* Top left origin for zoom */
+        }
+    </style>
+</head>
+<body>
+    <div id="graphContainer">
+        <div id="dynamicGraph" class="mermaid"></div>
+    </div>
+<script>
+
+    // Function to decode Pako-encoded string
+    function getQueryParam(param) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(param);
+    }
+
+    function decodeAndDecompress(data) {
+        // Decode Base64 to a Uint8Array
+        const compressed = Uint8Array.from(atob(decodeURIComponent(data)), c => c.charCodeAt(0));
+
+        // Decompress using pako
+        const decompressed = pako.inflate(compressed);
+
+        // Convert the decompressed data to a string
+        const output = new TextDecoder().decode(decompressed);
+
+        return output;
+    }
+
+    // Extract the query parameter
+    var encodedGraph = window.location.search.slice(7);
+
+
+    if (encodedGraph) {
+        const decodedGraph = decodeAndDecompress(encodedGraph );
+        if (decodedGraph) {
+            var container = document.getElementById("mermaid");
+            const dynamicGraph = document.getElementById('dynamicGraph');
+            let mermaidGraph = JSON.parse(decodedGraph);
+            let textContent = mermaidGraph.code; //.slice(0, mermaidGraph.code.indexOf('\n', 33195));
+            dynamicGraph.textContent = textContent;
+            // debugger
+            console.log(mermaidGraph.code)
+            console.log(mermaidGraph.code.slice(mermaidGraph.code.indexOf('\n', 33195), mermaidGraph.code.indexOf('\n', 33196)))
+
+            // Render the graph
+            mermaid.initialize({ startOnLoad: true, maxEdges: 120000 });
+        } else {
+            alert("Invalid graph data.");
+        }
+    } else {
+        alert("No graph data provided in the query parameter.");
+    }
+</script>
+</body>
+</html>
